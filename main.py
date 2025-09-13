@@ -1,21 +1,30 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
-from Routers import Users
-
 from Data import Connection
-from Models import User
+from Models import user
+from Routers import users
+from Util import hash_password
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Connection.Create_db_and_tables()
+    print("✅ Database initialized")
+
+    yield  # App is running
+
+    # --- Shutdown ---
+    print("👋 App shutting down...")
 
 
-app.include_router(Users.router)
+app = FastAPI(lifespan=lifespan)
+
+
+app.include_router(users.router)
 
 
 @app.get("/")
 async def root():
-    return {"messege": "test"}
-
-
-@app.on_event("startup")
-async def on_startup():
-    Connection.Create_db_and_tables()
+    return {"message": "main page"}
